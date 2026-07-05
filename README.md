@@ -145,18 +145,18 @@ Accepts any URL shape (`https://`, `git@`, `ssh://`), picks the account (from `-
 - Managed files are regenerated wholesale — no sed-into-your-configs surgery
 - `doctor` treats your *whole* environment as in scope, not just what wardrobe created
 
-## Comparison
+## How it compares
 
-| | git-wardrobe | [git-ego](https://github.com/bgreenwell/git-ego) | [git-switcher](https://github.com/TheYkk/git-switcher) |
+| | git-wardrobe | typical profile switchers | hand-rolled setup |
 |---|---|---|---|
-| Per-directory auto identity (`includeIf`) | ✅ | ✅ | ❌ (manual switch) |
-| Generates ssh config + enforces `IdentitiesOnly` | ✅ | ❌ | ❌ |
-| SSH key generation in setup | ✅ | ❌ | ❌ |
-| Key upload / registration flow | ✅ | ❌ | ❌ |
+| Per-directory auto identity (`includeIf`) | ✅ | sometimes — often manual switching | ✅ if you wire it yourself |
+| Generates ssh config + enforces `IdentitiesOnly` | ✅ | ❌ ssh side left to you | easy to forget — the classic wrong-key bug |
+| SSH key generation in setup | ✅ | ❌ | `ssh-keygen` by hand |
+| Key upload / registration flow | ✅ | ❌ | copy-paste into settings |
 | Setup audit (`doctor`) | ✅ | ❌ | ❌ |
 | Identity-verified clone helper | ✅ | ❌ | ❌ |
-| SSH commit signing setup | ✅ | ❌ | ❌ |
-| Live auth verification | ✅ | ❌ | ❌ |
+| SSH commit signing setup | ✅ | ❌ | GPG wrestling |
+| Live auth verification | ✅ | ❌ | `ssh -T`, if you remember |
 
 ## FAQ
 
