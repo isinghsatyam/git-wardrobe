@@ -106,17 +106,39 @@ func GenerateKey(path, comment, passphrase string) error {
 }
 
 // AddToAgent loads the key into ssh-agent, storing the passphrase in the
-// macOS Keychain where supported so it is a one-time prompt.
-func AddToAgent(keyPath string) error {
+// macOS Keychain where supported. When the passphrase is known (we just
+// generated the key) it is supplied via a one-shot askpass helper so the
+// user is not prompted to retype what they entered seconds ago. The
+// passphrase travels through the environment, never argv or the script.
+func AddToAgent(keyPath, passphrase string) error {
 	args := []string{}
 	if runtime.GOOS == "darwin" {
 		args = append(args, "--apple-use-keychain")
 	}
 	args = append(args, keyPath)
 	cmd := exec.Command("ssh-add", args...)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+
+	if passphrase == "" {
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
+
+	dir, err := os.MkdirTemp("", "wardrobe-askpass")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(dir)
+	helper := filepath.Join(dir, "askpass.sh")
+	if err := os.WriteFile(helper, []byte("#!/bin/sh\nprintf '%s' \"$WARDROBE_ASKPASS\"\n"), 0o700); err != nil {
+		return err
+	}
+	cmd.Env = append(os.Environ(),
+		"SSH_ASKPASS="+helper,
+		"SSH_ASKPASS_REQUIRE=force",
+		"WARDROBE_ASKPASS="+passphrase,
+	)
 	return cmd.Run()
 }
 

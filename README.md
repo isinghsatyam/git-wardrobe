@@ -15,6 +15,8 @@
 
 `add` an account once →  every repo in that account's folder **automatically** gets the right email, the right SSH key, the right signing key. Clone, commit, push — zero switching, ever. And `doctor` audits the whole setup so it *stays* right.
 
+![git-wardrobe demo](docs/demo.gif)
+
 </div>
 
 ---
