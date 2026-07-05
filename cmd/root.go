@@ -5,9 +5,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version is stamped by goreleaser / -ldflags at build time.
+var Version = "0.1.0"
+
 var rootCmd = &cobra.Command{
-	Use:   "git-wardrobe",
-	Short: "One wardrobe, many git identities",
+	Use:     "git-wardrobe",
+	Version: Version,
+	Short:   "One wardrobe, many git identities",
 	Long: `git-wardrobe manages multiple git accounts (work, personal, clients)
 on one machine: SSH keys, ssh config, and per-directory git identities,
 all generated from a single config file.
