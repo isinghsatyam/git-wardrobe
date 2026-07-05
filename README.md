@@ -1,6 +1,6 @@
 <div align="center">
 
-![git-wardrobe](https://capsule-render.vercel.app/api?type=waving&color=0%3A8871e5%2C100%3Ab678c4&height=220&section=header&text=git-wardrobe&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=One%20wardrobe%2C%20many%20git%20identities&descSize=22&descAlignY=58)
+![git-wardrobe](https://capsule-render.vercel.app/api?type=waving&color=0%3Af12711%2C100%3Af5af19&height=220&section=header&text=git-wardrobe&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=One%20wardrobe%2C%20many%20git%20identities&descSize=22&descAlignY=58)
 
 ### 😮‍💨 Tired of switching git profiles manually?
 
@@ -75,9 +75,26 @@ Because each identity fragment carries `url."git@wardrobe-<name>:".insteadOf = g
 
 ## Install
 
+**Prerequisite: Go 1.22+.** No Go yet? One line:
+
+```sh
+# macOS
+brew install go
+# Debian/Ubuntu
+sudo apt install golang-go
+# Fedora
+sudo dnf install golang
+# Windows
+winget install GoLang.Go
+```
+
+(or grab the official installer from [go.dev/dl](https://go.dev/dl/)). Then:
+
 ```sh
 go install github.com/isinghsatyam/git-wardrobe@latest
 ```
+
+`go install` drops the binary in `~/go/bin` — make sure that's on your PATH (`export PATH="$HOME/go/bin:$PATH"` in your shell profile).
 
 or build from source:
 
@@ -197,6 +214,6 @@ MIT
 
 <div align="center">
 
-![footer](https://capsule-render.vercel.app/api?type=waving&color=0%3A8871e5%2C100%3Ab678c4&height=110&section=footer)
+![footer](https://capsule-render.vercel.app/api?type=waving&color=0%3Af12711%2C100%3Af5af19&height=110&section=footer)
 
 </div>
