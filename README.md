@@ -8,7 +8,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)](#install)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)](#platforms--permissions)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#)
 
 `add` an account once →  every repo in that account's folder **automatically** gets the right email, the right SSH key, the right signing key. Clone, commit, push — zero switching, ever. And `doctor` audits the whole setup so it *stays* right.
@@ -134,6 +134,18 @@ Accepts any URL shape (`https://`, `git@`, `ssh://`), picks the account (from `-
 ### `git wardrobe list` / `remove`
 
 `list` renders the account table (`--check` adds live auth status). `remove <name>` deletes an account and regenerates all managed files; the key stays unless you pass `--delete-key`.
+
+## Platforms & permissions
+
+| Platform | Status | Notes |
+|---|---|---|
+| 🍎 macOS | ✅ Full | Key passphrases stored in Keychain (`UseKeychain`), clipboard via `pbcopy` |
+| 🐧 Linux | ✅ Full | Needs a running `ssh-agent` (default on desktop distros); clipboard via `wl-copy`/`xclip` when present |
+| 🪟 Windows 10/11 | ⚠️ Experimental | Works with the built-in OpenSSH client + Git for Windows. Enable the agent once (admin PowerShell): `Set-Service ssh-agent -StartupType Automatic; Start-Service ssh-agent` |
+
+**No `sudo`. Ever.** Everything git-wardrobe touches lives in *your* home directory — `~/.ssh`, `~/.config/git-wardrobe`, your global git config — and it creates those files with the right permissions itself (`700` for `~/.ssh`, `600` for keys and ssh configs). If a permission error ever appears, it means those files were already root-owned by some earlier accident; fix ownership once with `sudo chown -R $USER ~/.ssh` and never think about it again.
+
+The only step that may involve elevated rights is *installing the binary* if you choose a system location (`sudo mv git-wardrobe /usr/local/bin/`) — dropping it in `~/bin` or using `go install` (installs to `~/go/bin`) avoids even that.
 
 ## Security posture
 

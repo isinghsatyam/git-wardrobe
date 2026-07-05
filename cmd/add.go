@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/charmbracelet/huh"
@@ -103,6 +104,13 @@ func runAdd(cmd *cobra.Command, args []string) error {
 			ui.Warnf("key has no passphrase — anyone with the file has the account. `ssh-keygen -p -f %s` adds one later.", a.KeyPath())
 		} else if err := sshcfg.AddToAgent(a.KeyPath()); err == nil {
 			ui.Successf("key loaded into ssh-agent (passphrase remembered by OS keychain)")
+		} else {
+			ui.Warnf("could not load key into ssh-agent: %v", err)
+			if runtime.GOOS == "windows" {
+				ui.Infof("enable the agent once (admin PowerShell): Set-Service ssh-agent -StartupType Automatic; Start-Service ssh-agent")
+			} else {
+				ui.Infof("is ssh-agent running? try: eval \"$(ssh-agent -s)\" then ssh-add %s", a.KeyPath())
+			}
 		}
 	} else if _, err := os.Stat(a.KeyPath()); err != nil {
 		return fmt.Errorf("key %s not found", a.KeyPath())

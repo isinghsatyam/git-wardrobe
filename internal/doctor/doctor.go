@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/isinghsatyam/git-wardrobe/internal/config"
@@ -94,7 +95,7 @@ func (r *Report) checkAccount(a *config.Account, network bool) {
 	if fi, err := os.Stat(key); err != nil {
 		r.add(Failure, area, fmt.Sprintf("private key %s missing", config.ContractHome(key)), "generate or restore the key, then re-run `git wardrobe add`")
 		return
-	} else if fi.Mode().Perm()&0o077 != 0 {
+	} else if runtime.GOOS != "windows" && fi.Mode().Perm()&0o077 != 0 {
 		r.add(Warning, area, fmt.Sprintf("key %s is group/world readable (%o)", config.ContractHome(key), fi.Mode().Perm()), fmt.Sprintf("chmod 600 %s", key))
 	}
 

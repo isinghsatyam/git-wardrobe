@@ -56,6 +56,8 @@ func Clipboard(text string) bool {
 		} else {
 			return false
 		}
+	case "windows":
+		cmd = exec.Command("clip")
 	default:
 		return false
 	}
