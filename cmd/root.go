@@ -1,0 +1,27 @@
+// Package cmd wires the git-wardrobe CLI.
+package cmd
+
+import (
+	"github.com/spf13/cobra"
+)
+
+var rootCmd = &cobra.Command{
+	Use:   "git-wardrobe",
+	Short: "One wardrobe, many git identities",
+	Long: `git-wardrobe manages multiple git accounts (work, personal, clients)
+on one machine: SSH keys, ssh config, and per-directory git identities,
+all generated from a single config file.
+
+Install it on PATH and git picks it up as a subcommand:
+
+    git wardrobe add       set up a new account (interactive)
+    git wardrobe list      show all accounts
+    git wardrobe status    which identity applies right here?
+    git wardrobe doctor    audit the whole setup
+    git wardrobe clone     clone with the right identity, always`,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+}
+
+// Execute runs the CLI.
+func Execute() error { return rootCmd.Execute() }
