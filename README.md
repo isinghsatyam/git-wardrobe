@@ -6,6 +6,8 @@
 
 **Work, personal, client accounts on one machine — and never a commit as the wrong person again.**
 
+[![CI](https://github.com/isinghsatyam/git-wardrobe/actions/workflows/ci.yml/badge.svg)](https://github.com/isinghsatyam/git-wardrobe/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/isinghsatyam/git-wardrobe)](https://github.com/isinghsatyam/git-wardrobe/releases/latest)
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)](#platforms--permissions)
@@ -74,6 +76,12 @@ anywhere else               →  your global config (doctor suggests fail-closed
 Because each identity fragment carries `url."git@wardrobe-<name>:".insteadOf = git@github.com:`, a plain `git clone git@github.com:you/repo.git` **inside an account directory automatically uses that account's key**. No URL surgery, no remembering aliases.
 
 ## Install
+
+### Option 1 — prebuilt binary (no Go needed)
+
+Grab the archive for your OS from the [latest release](https://github.com/isinghsatyam/git-wardrobe/releases/latest), verify against `checksums.txt`, extract, and put `git-wardrobe` anywhere on your PATH. Done — git now knows `git wardrobe`.
+
+### Option 2 — with Go
 
 **Prerequisite: Go 1.22+.** No Go yet? One line:
 
@@ -207,6 +215,12 @@ GitLab, Bitbucket and self-hosted hosts work for keys, aliases and identities. K
 - `doctor --fix` — apply suggested remedies automatically
 - Pre-commit guard hook (defense in depth against identity drift)
 - Homebrew tap and prebuilt binaries
+
+## Support
+
+If git-wardrobe saved you from a `you@dayjob.com` commit on your side project, consider fueling development:
+
+<a href="https://paypal.me/isinghsatyam"><img src="https://img.shields.io/badge/☕_Buy_me_a_coffee-PayPal-0070BA?logo=paypal&logoColor=white" alt="Buy me a coffee" height="32"></a>
 
 ## License
 
