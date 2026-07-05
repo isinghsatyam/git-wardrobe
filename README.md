@@ -1,6 +1,21 @@
-# git-wardrobe 🚪👔
+<div align="center">
 
-**One wardrobe, many git identities.** Manage multiple git accounts — work, personal, clients — on one machine without ever committing as the wrong person again.
+![git-wardrobe](https://capsule-render.vercel.app/api?type=waving&color=0%3A8871e5%2C100%3Ab678c4&height=220&section=header&text=git-wardrobe&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=One%20wardrobe%2C%20many%20git%20identities&descSize=22&descAlignY=58)
+
+### 😮‍💨 Tired of switching git profiles manually?
+
+**Work, personal, client accounts on one machine — and never a commit as the wrong person again.**
+
+[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)](#install)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#)
+
+`add` an account once →  every repo in that account's folder **automatically** gets the right email, the right SSH key, the right signing key. Clone, commit, push — zero switching, ever. And `doctor` audits the whole setup so it *stays* right.
+
+</div>
+
+---
 
 `git-wardrobe` sets up and maintains everything the multi-account dance needs: SSH keys, ssh config host aliases, and per-directory git identities — all generated from a single config file, all auditable with one command.
 
@@ -167,3 +182,9 @@ GitLab, Bitbucket and self-hosted hosts work for keys, aliases and identities. K
 ## License
 
 MIT
+
+<div align="center">
+
+![footer](https://capsule-render.vercel.app/api?type=waving&color=0%3A8871e5%2C100%3Ab678c4&height=110&section=footer)
+
+</div>
