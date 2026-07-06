@@ -208,6 +208,17 @@ Point `add` at your existing key (`--key ~/.ssh/id_work` or the "reuse" wizard o
 **What about HTTPS remotes?**
 Wardrobe's identity routing (`includeIf`) applies regardless of transport, so commit author/signing is always right. Key routing is SSH; for HTTPS credential separation, `gh auth switch` or per-account credential helpers are the right tool.
 
+**Does the `gh` CLI need switching per project?**
+Rarely. Plain git (clone/commit/push) never touches `gh` — wardrobe's SSH routing covers it. Only `gh`-specific commands (creating repos, PRs, issues, releases) use gh's own login, which is global, not per-directory. gh handles multiple accounts natively:
+
+```sh
+gh auth login                  # run once per account — all get stored
+gh auth switch -u <username>   # switch the active one when needed
+GH_TOKEN=<token> gh pr list    # or override for a single command
+```
+
+Practical setup: keep gh logged into your main account and switch only when a project actually needs gh commands under another identity. Auto-warning on gh/directory mismatch is on the roadmap.
+
 **Non-GitHub providers?**
 GitLab, Bitbucket and self-hosted hosts work for keys, aliases and identities. Key *upload* automation is GitHub-only (via `gh`); elsewhere you get the key on your clipboard and the right settings URL.
 
@@ -216,7 +227,8 @@ GitLab, Bitbucket and self-hosted hosts work for keys, aliases and identities. K
 - `import` — adopt an existing hand-rolled multi-account setup in one command
 - `doctor --fix` — apply suggested remedies automatically
 - Pre-commit guard hook (defense in depth against identity drift)
-- Homebrew tap and prebuilt binaries
+- Warn when the active `gh` CLI account doesn't match the directory's account
+- Homebrew tap
 
 ## Support
 
