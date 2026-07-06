@@ -15,14 +15,15 @@ import (
 
 // Account is one git identity: who you are, where it applies, which key.
 type Account struct {
-	Name     string `toml:"name"`
-	GitName  string `toml:"git_name"`
-	Email    string `toml:"email"`
-	Dir      string `toml:"dir"`      // directory root this identity applies to, e.g. ~/personal
-	Host     string `toml:"host"`     // provider host, e.g. github.com
-	Key      string `toml:"key"`      // private key path, e.g. ~/.ssh/id_personal
-	Sign     string `toml:"sign"`     // "ssh" or "none"
-	Username string `toml:"username"` // provider username, filled after verify
+	Name       string `toml:"name"`
+	GitName    string `toml:"git_name"`
+	Email      string `toml:"email"`
+	Dir        string `toml:"dir"`         // directory root this identity applies to, e.g. ~/personal
+	Host       string `toml:"host"`        // provider host, e.g. github.com
+	Key        string `toml:"key"`         // private key path, e.g. ~/.ssh/id_personal
+	Sign       string `toml:"sign"`        // "ssh", "gpg" or "none"
+	SigningKey string `toml:"signing_key"` // GPG key id, only when Sign == "gpg"
+	Username   string `toml:"username"`    // provider username, filled after verify
 }
 
 // Config is the on-disk TOML document.
@@ -141,8 +142,11 @@ func (a *Account) Validate() error {
 	if a.Host == "" {
 		return fmt.Errorf("host is required")
 	}
-	if a.Sign != "ssh" && a.Sign != "none" {
-		return fmt.Errorf("sign must be \"ssh\" or \"none\", got %q", a.Sign)
+	if a.Sign != "ssh" && a.Sign != "gpg" && a.Sign != "none" {
+		return fmt.Errorf("sign must be \"ssh\", \"gpg\" or \"none\", got %q", a.Sign)
+	}
+	if a.Sign == "gpg" && a.SigningKey == "" {
+		return fmt.Errorf("sign=gpg needs a signing_key (GPG key id)")
 	}
 	return nil
 }

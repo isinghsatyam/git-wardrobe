@@ -39,6 +39,7 @@ func TestValidate(t *testing.T) {
 		{Name: "x", Email: "nomail", Dir: "~/x", Host: "h", Sign: "ssh"},
 		{Name: "x", Email: "a@b.c", Dir: "", Host: "h", Sign: "ssh"},
 		{Name: "x", Email: "a@b.c", Dir: "~/x", Host: "h", Sign: "gpg2"},
+		{Name: "x", Email: "a@b.c", Dir: "~/x", Host: "h", Sign: "gpg"}, // gpg without key id
 	} {
 		if err := bad.Validate(); err == nil {
 			t.Errorf("expected rejection: %+v", bad)

@@ -18,8 +18,8 @@ import (
 )
 
 var addFlags struct {
-	name, gitName, email, dir, host, key, sign string
-	generate, noVerify, noUpload, yes          bool
+	name, gitName, email, dir, host, key, sign, signingKey string
+	generate, noVerify, noUpload, yes                      bool
 }
 
 var addCmd = &cobra.Command{
@@ -36,7 +36,8 @@ func init() {
 	f.StringVar(&addFlags.dir, "dir", "", "directory root for this identity, e.g. ~/personal")
 	f.StringVar(&addFlags.host, "host", "github.com", "provider host")
 	f.StringVar(&addFlags.key, "key", "", "existing private key to reuse (default: generate new)")
-	f.StringVar(&addFlags.sign, "sign", "ssh", "commit signing: ssh or none")
+	f.StringVar(&addFlags.sign, "sign", "ssh", "commit signing: ssh, gpg or none")
+	f.StringVar(&addFlags.signingKey, "signing-key", "", "GPG key id (required with --sign gpg)")
 	f.BoolVar(&addFlags.generate, "generate-key", false, "generate a new ed25519 key without asking")
 	f.BoolVar(&addFlags.noVerify, "no-verify", false, "skip the live ssh authentication test")
 	f.BoolVar(&addFlags.noUpload, "no-upload", false, "never offer gh key upload")
@@ -55,13 +56,14 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	a := config.Account{
-		Name:    addFlags.name,
-		GitName: addFlags.gitName,
-		Email:   addFlags.email,
-		Dir:     addFlags.dir,
-		Host:    addFlags.host,
-		Key:     addFlags.key,
-		Sign:    addFlags.sign,
+		Name:       addFlags.name,
+		GitName:    addFlags.gitName,
+		Email:      addFlags.email,
+		Dir:        addFlags.dir,
+		Host:       addFlags.host,
+		Key:        addFlags.key,
+		Sign:       addFlags.sign,
+		SigningKey: addFlags.signingKey,
 	}
 	passphrase := ""
 	generate := addFlags.generate || a.Key == ""
@@ -209,6 +211,7 @@ func askAccountBasics(cfg *config.Config, a *config.Account) error {
 				Description("SSH signing reuses the same key — verified badge, no GPG needed").
 				Options(
 					huh.NewOption("Sign with SSH key (recommended)", "ssh"),
+					huh.NewOption("Sign with an existing GPG key", "gpg"),
 					huh.NewOption("No signing", "none"),
 				).
 				Value(&a.Sign),
@@ -218,7 +221,16 @@ func askAccountBasics(cfg *config.Config, a *config.Account) error {
 		return err
 	}
 	if a.Host == "other" {
-		return huh.NewInput().Title("Host").Placeholder("git.company.com").Value(&a.Host).Run()
+		if err := huh.NewInput().Title("Host").Placeholder("git.company.com").Value(&a.Host).Run(); err != nil {
+			return err
+		}
+	}
+	if a.Sign == "gpg" && a.SigningKey == "" {
+		return huh.NewInput().Title("GPG key id").
+			Description("`gpg --list-secret-keys --keyid-format long` shows it").
+			Placeholder("A8CDC4C6FC96FD46").
+			Value(&a.SigningKey).
+			Validate(huh.ValidateNotEmpty()).Run()
 	}
 	return nil
 }

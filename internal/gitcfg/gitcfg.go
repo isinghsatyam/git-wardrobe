@@ -51,11 +51,16 @@ func RenderAccount(a *config.Account) string {
 	b.WriteString("[user]\n")
 	fmt.Fprintf(&b, "    name = %s\n", a.GitName)
 	fmt.Fprintf(&b, "    email = %s\n", a.Email)
-	if a.Sign == "ssh" {
+	switch a.Sign {
+	case "ssh":
 		fmt.Fprintf(&b, "    signingkey = %s.pub\n", config.ContractHome(a.KeyPath()))
 		b.WriteString("[gpg]\n    format = ssh\n")
 		b.WriteString("[commit]\n    gpgsign = true\n")
-	} else {
+	case "gpg":
+		fmt.Fprintf(&b, "    signingkey = %s\n", a.SigningKey)
+		b.WriteString("[gpg]\n    format = openpgp\n")
+		b.WriteString("[commit]\n    gpgsign = true\n")
+	default:
 		b.WriteString("[commit]\n    gpgsign = false\n")
 	}
 	fmt.Fprintf(&b, "[url \"git@%s:\"]\n", a.Alias())
