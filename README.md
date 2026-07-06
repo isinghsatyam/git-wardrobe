@@ -158,6 +158,16 @@ Accepts any URL shape (`https://`, `git@`, `ssh://`), picks the account (from `-
 
 "Which hat am I wearing right here?" Shows the matching account, the identity git will actually use (name/email/signing key), and — inside a repo — which SSH key a push to `origin` would really use, resolved by OpenSSH itself.
 
+### Commit signing — three modes per account
+
+| Mode | When | What wardrobe does |
+|---|---|---|
+| `ssh` *(recommended)* | New setups | Signs with the account's SSH key — no GPG install, no extra keys. Register the same public key on GitHub **twice**: as *Authentication Key* and as *Signing Key* → commits show **Verified**. |
+| `gpg` | You already have a GPG key | Keeps your existing setup: `--sign gpg --signing-key <KEYID>`. Find the id with `gpg --list-secret-keys --keyid-format long` (the part after `ed25519/` or `rsa4096/`). Wardrobe wires `user.signingkey` + `commit.gpgsign` for that account's directory only. |
+| `none` | Employer doesn't use signing | `commit.gpgsign false` for that directory. |
+
+Wardrobe never creates or deletes GPG keys and never touches your GPG keyring — switching an account between modes only changes which config git reads in that directory. Old signed commits stay verified regardless.
+
 ### `git wardrobe list` / `remove`
 
 `list` renders the account table (`--check` adds live auth status). `remove <name>` deletes an account and regenerates all managed files; the key stays unless you pass `--delete-key`.
