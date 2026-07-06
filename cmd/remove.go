@@ -17,18 +17,35 @@ import (
 var removeDeleteKey bool
 
 var removeCmd = &cobra.Command{
-	Use:     "remove <name>",
+	Use:     "remove [name]",
 	Aliases: []string{"rm"},
 	Short:   "Remove an account and regenerate the managed configs",
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
 		if err != nil {
 			return err
 		}
-		a, ok := cfg.Get(args[0])
+		var name string
+		switch {
+		case len(args) == 1:
+			name = args[0]
+		case len(cfg.Accounts) == 0:
+			return fmt.Errorf("no accounts configured")
+		case term.IsTerminal(int(os.Stdin.Fd())):
+			var opts []huh.Option[string]
+			for _, acc := range cfg.Accounts {
+				opts = append(opts, huh.NewOption(fmt.Sprintf("%s — %s (%s)", acc.Name, acc.Email, acc.Dir), acc.Name))
+			}
+			if err := huh.NewSelect[string]().Title("Remove which account?").Options(opts...).Value(&name).Run(); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("pass the account name: git wardrobe remove <name>")
+		}
+		a, ok := cfg.Get(name)
 		if !ok {
-			return fmt.Errorf("no account named %q", args[0])
+			return fmt.Errorf("no account named %q", name)
 		}
 		keyPath := a.KeyPath()
 
@@ -45,7 +62,7 @@ var removeCmd = &cobra.Command{
 			}
 		}
 
-		cfg.Remove(args[0])
+		cfg.Remove(name)
 		if err := sshcfg.WriteManaged(cfg.Accounts); err != nil {
 			return err
 		}
@@ -55,7 +72,7 @@ var removeCmd = &cobra.Command{
 		if err := cfg.Save(); err != nil {
 			return err
 		}
-		ui.Successf("account %q removed; managed configs regenerated", args[0])
+		ui.Successf("account %q removed; managed configs regenerated", name)
 
 		if removeDeleteKey {
 			if err := os.Remove(keyPath); err == nil {
