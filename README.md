@@ -172,6 +172,17 @@ Wardrobe never creates or deletes GPG keys and never touches your GPG keyring â€
 
 `list` renders the account table (`--check` adds live auth status). `remove <name>` deletes an account and regenerates all managed files; the key stays unless you pass `--delete-key`.
 
+### Changing things later: `git wardrobe sync`
+
+`~/.config/git-wardrobe/config.toml` is the single source of truth, and it's yours to edit. Swap an account's key, change its email or directory, flip signing mode â€” then:
+
+```sh
+git wardrobe sync     # validates config.toml, regenerates every managed file
+git wardrobe doctor   # confirm the new state is sound
+```
+
+An invalid edit (typo'd signing mode, missing email) is rejected before anything is regenerated. For bigger surgery, `remove` + `add` re-runs the full wizard.
+
 ## Platforms & permissions
 
 | Platform | Status | Notes |
