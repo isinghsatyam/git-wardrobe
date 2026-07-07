@@ -30,16 +30,24 @@ func TestMatchDirLongestWins(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
-	good := Account{Name: "p", Email: "a@b.c", Dir: "~/p", Host: "github.com", Sign: "ssh"}
-	if err := good.Validate(); err != nil {
-		t.Fatalf("valid account rejected: %v", err)
+	for _, good := range []Account{
+		{Name: "p", Email: "a@b.c", Dir: "~/p", Host: "github.com", Key: "~/.ssh/k", Sign: "ssh"},
+		{Name: "pat", Email: "a@b.c", Dir: "~/p2", Host: "dev.azure.com", Auth: "https", Sign: "none"},
+		{Name: "patgpg", Email: "a@b.c", Dir: "~/p3", Host: "dev.azure.com", Auth: "https", Sign: "gpg", SigningKey: "ABC123"},
+	} {
+		if err := good.Validate(); err != nil {
+			t.Fatalf("valid account %q rejected: %v", good.Name, err)
+		}
 	}
 	for _, bad := range []Account{
-		{Name: "has space", Email: "a@b.c", Dir: "~/x", Host: "h", Sign: "ssh"},
-		{Name: "x", Email: "nomail", Dir: "~/x", Host: "h", Sign: "ssh"},
-		{Name: "x", Email: "a@b.c", Dir: "", Host: "h", Sign: "ssh"},
-		{Name: "x", Email: "a@b.c", Dir: "~/x", Host: "h", Sign: "gpg2"},
-		{Name: "x", Email: "a@b.c", Dir: "~/x", Host: "h", Sign: "gpg"}, // gpg without key id
+		{Name: "has space", Email: "a@b.c", Dir: "~/x", Host: "h", Key: "~/.ssh/k", Sign: "ssh"},
+		{Name: "x", Email: "nomail", Dir: "~/x", Host: "h", Key: "~/.ssh/k", Sign: "ssh"},
+		{Name: "x", Email: "a@b.c", Dir: "", Host: "h", Key: "~/.ssh/k", Sign: "ssh"},
+		{Name: "x", Email: "a@b.c", Dir: "~/x", Host: "h", Key: "~/.ssh/k", Sign: "gpg2"},
+		{Name: "x", Email: "a@b.c", Dir: "~/x", Host: "h", Key: "~/.ssh/k", Sign: "gpg"}, // gpg without key id
+		{Name: "x", Email: "a@b.c", Dir: "~/x", Host: "h", Sign: "ssh"},                  // ssh auth without key
+		{Name: "x", Email: "a@b.c", Dir: "~/x", Host: "h", Auth: "https", Sign: "ssh"},   // ssh signing without ssh key
+		{Name: "x", Email: "a@b.c", Dir: "~/x", Host: "h", Auth: "ftp", Sign: "none"},    // bogus auth
 	} {
 		if err := bad.Validate(); err == nil {
 			t.Errorf("expected rejection: %+v", bad)

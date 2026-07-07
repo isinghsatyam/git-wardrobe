@@ -20,7 +20,8 @@ type Account struct {
 	Email      string `toml:"email"`
 	Dir        string `toml:"dir"`         // directory root this identity applies to, e.g. ~/personal
 	Host       string `toml:"host"`        // provider host, e.g. github.com
-	Key        string `toml:"key"`         // private key path, e.g. ~/.ssh/id_personal
+	Auth       string `toml:"auth"`        // "ssh" (default) or "https" (PAT via credential helper)
+	Key        string `toml:"key"`         // private key path, e.g. ~/.ssh/id_personal; ssh auth only
 	Sign       string `toml:"sign"`        // "ssh", "gpg" or "none"
 	SigningKey string `toml:"signing_key"` // GPG key id, only when Sign == "gpg"
 	Username   string `toml:"username"`    // provider username, filled after verify
@@ -122,6 +123,14 @@ func (c *Config) MatchDir(path string) (*Account, bool) {
 // Alias returns the ssh host alias for an account, e.g. wardrobe-personal.
 func (a *Account) Alias() string { return "wardrobe-" + a.Name }
 
+// AuthMode returns "ssh" or "https"; empty means ssh for compatibility.
+func (a *Account) AuthMode() string {
+	if a.Auth == "" {
+		return "ssh"
+	}
+	return a.Auth
+}
+
 // KeyPath returns the expanded private key path.
 func (a *Account) KeyPath() string { return ExpandHome(a.Key) }
 
@@ -141,6 +150,15 @@ func (a *Account) Validate() error {
 	}
 	if a.Host == "" {
 		return fmt.Errorf("host is required")
+	}
+	if a.Auth != "" && a.Auth != "ssh" && a.Auth != "https" {
+		return fmt.Errorf("auth must be \"ssh\" or \"https\", got %q", a.Auth)
+	}
+	if a.AuthMode() == "ssh" && a.Key == "" {
+		return fmt.Errorf("ssh auth needs a key path")
+	}
+	if a.Sign == "ssh" && a.AuthMode() == "https" {
+		return fmt.Errorf("sign=ssh needs an ssh key — use sign=gpg or sign=none with https auth")
 	}
 	if a.Sign != "ssh" && a.Sign != "gpg" && a.Sign != "none" {
 		return fmt.Errorf("sign must be \"ssh\", \"gpg\" or \"none\", got %q", a.Sign)

@@ -63,8 +63,10 @@ func RenderAccount(a *config.Account) string {
 	default:
 		b.WriteString("[commit]\n    gpgsign = false\n")
 	}
-	fmt.Fprintf(&b, "[url \"git@%s:\"]\n", a.Alias())
-	fmt.Fprintf(&b, "    insteadOf = git@%s:\n", a.Host)
+	if a.AuthMode() == "ssh" {
+		fmt.Fprintf(&b, "[url \"git@%s:\"]\n", a.Alias())
+		fmt.Fprintf(&b, "    insteadOf = git@%s:\n", a.Host)
+	}
 	return b.String()
 }
 

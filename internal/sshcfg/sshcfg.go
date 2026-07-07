@@ -40,6 +40,9 @@ func Render(accounts []config.Account) string {
 	b.WriteString("# Managed by git-wardrobe — do not edit; run `git wardrobe` commands instead.\n")
 	b.WriteString("# Regenerated from " + config.ContractHome(config.Path()) + "\n\n")
 	for _, a := range accounts {
+		if a.AuthMode() != "ssh" {
+			continue
+		}
 		fmt.Fprintf(&b, "Host %s\n", a.Alias())
 		fmt.Fprintf(&b, "    HostName %s\n", a.Host)
 		b.WriteString("    User git\n")

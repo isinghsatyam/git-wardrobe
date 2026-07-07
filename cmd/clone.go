@@ -60,6 +60,9 @@ func runClone(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	// Azure-style URLs nest project paths in the repo segment; the last
+	// element is the repository name for target-directory purposes.
+	repo = filepath.Base(repo)
 
 	acct, err := pickAccount(cfg, host)
 	if err != nil {
@@ -80,7 +83,12 @@ func runClone(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	cloneURL := fmt.Sprintf("git@%s:%s/%s.git", acct.Alias(), owner, repo)
+	// https/PAT accounts keep the URL untouched (credential helper handles
+	// auth, and hosts like Azure DevOps have their own URL shapes).
+	cloneURL := strings.TrimSpace(args[0])
+	if acct.AuthMode() == "ssh" {
+		cloneURL = fmt.Sprintf("git@%s:%s/%s.git", acct.Alias(), owner, repo)
+	}
 	ui.Infof("account   %s (%s)", ui.Accent.Render(acct.Name), acct.Email)
 	ui.Infof("url       %s", cloneURL)
 	ui.Infof("target    %s", config.ContractHome(target))

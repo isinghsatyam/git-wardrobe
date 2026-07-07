@@ -90,6 +90,13 @@ func (r *Report) checkWiring(cfg *config.Config) {
 
 func (r *Report) checkAccount(a *config.Account, network bool) {
 	area := "account:" + a.Name
+
+	if a.AuthMode() == "https" {
+		r.add(Info, area, fmt.Sprintf("https/PAT auth — credentials come from the git credential helper for %s", a.Host), "")
+		r.checkAccountDir(a, area)
+		return
+	}
+
 	key := a.KeyPath()
 
 	if fi, err := os.Stat(key); err != nil {
@@ -113,16 +120,7 @@ func (r *Report) checkAccount(a *config.Account, network bool) {
 		r.add(OK, area, fmt.Sprintf("alias %s → %s", a.Alias(), config.ContractHome(key)), "")
 	}
 
-	if _, err := os.Stat(a.DirPath()); err != nil {
-		r.add(Warning, area, fmt.Sprintf("directory %s does not exist yet", a.Dir), fmt.Sprintf("mkdir -p %s", a.DirPath()))
-	} else if repo := findRepoUnder(a.DirPath()); repo != "" {
-		_, email, _ := gitcfg.EffectiveIdentity(repo)
-		if email == a.Email {
-			r.add(OK, area, fmt.Sprintf("identity check in %s: %s", config.ContractHome(repo), email), "")
-		} else {
-			r.add(Failure, area, fmt.Sprintf("repo %s resolves email %q, expected %q", config.ContractHome(repo), email, a.Email), "a local repo config or another include is overriding the wardrobe identity")
-		}
-	}
+	r.checkAccountDir(a, area)
 
 	if network {
 		if user, err := sshcfg.Verify(a.Alias()); err != nil {
@@ -138,12 +136,31 @@ func (r *Report) checkAccount(a *config.Account, network bool) {
 	}
 }
 
+// checkAccountDir verifies the directory exists and that a repo inside it
+// resolves the account's identity.
+func (r *Report) checkAccountDir(a *config.Account, area string) {
+	if _, err := os.Stat(a.DirPath()); err != nil {
+		r.add(Warning, area, fmt.Sprintf("directory %s does not exist yet", a.Dir), fmt.Sprintf("mkdir -p %s", a.DirPath()))
+		return
+	}
+	if repo := findRepoUnder(a.DirPath()); repo != "" {
+		_, email, _ := gitcfg.EffectiveIdentity(repo)
+		if email == a.Email {
+			r.add(OK, area, fmt.Sprintf("identity check in %s: %s", config.ContractHome(repo), email), "")
+		} else {
+			r.add(Failure, area, fmt.Sprintf("repo %s resolves email %q, expected %q", config.ContractHome(repo), email, a.Email), "a local repo config or another include is overriding the wardrobe identity")
+		}
+	}
+}
+
 // checkDefaultHostLeak warns when a bare `git@github.com` (outside any
 // account directory) silently authenticates with one account's key.
 func (r *Report) checkDefaultHostLeak(cfg *config.Config) {
 	hosts := map[string]bool{}
 	for _, a := range cfg.Accounts {
-		hosts[a.Host] = true
+		if a.AuthMode() == "ssh" {
+			hosts[a.Host] = true
+		}
 	}
 	for host := range hosts {
 		resolved, err := sshcfg.ResolveIdentityFile(host)

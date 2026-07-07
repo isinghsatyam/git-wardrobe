@@ -27,7 +27,7 @@ var listCmd = &cobra.Command{
 			ui.Infof("no accounts yet — run `git wardrobe add`")
 			return nil
 		}
-		headers := []string{"NAME", "EMAIL", "DIRECTORY", "KEY", "SIGN"}
+		headers := []string{"NAME", "EMAIL", "DIRECTORY", "AUTH", "KEY", "SIGN"}
 		if listCheck {
 			headers = append(headers, "AUTH")
 		}
@@ -42,11 +42,16 @@ var listCmd = &cobra.Command{
 			}).
 			Headers(headers...)
 		for _, a := range cfg.Accounts {
+			key := config.ContractHome(a.KeyPath())
+			if a.AuthMode() == "https" {
+				key = ui.Dim.Render("(PAT)")
+			}
 			row := []string{
 				ui.Accent.Render(a.Name),
 				a.Email,
 				a.Dir,
-				config.ContractHome(a.KeyPath()),
+				a.AuthMode(),
+				key,
 				a.Sign,
 			}
 			if listCheck {

@@ -18,8 +18,8 @@ import (
 )
 
 var addFlags struct {
-	name, gitName, email, dir, host, key, sign, signingKey string
-	generate, noVerify, noUpload, yes                      bool
+	name, gitName, email, dir, host, key, sign, signingKey, auth string
+	generate, noVerify, noUpload, yes                            bool
 }
 
 var addCmd = &cobra.Command{
@@ -38,6 +38,7 @@ func init() {
 	f.StringVar(&addFlags.key, "key", "", "existing private key to reuse (default: generate new)")
 	f.StringVar(&addFlags.sign, "sign", "ssh", "commit signing: ssh, gpg or none")
 	f.StringVar(&addFlags.signingKey, "signing-key", "", "GPG key id (required with --sign gpg)")
+	f.StringVar(&addFlags.auth, "auth", "ssh", "auth transport: ssh (keys) or https (PAT via credential helper)")
 	f.BoolVar(&addFlags.generate, "generate-key", false, "generate a new ed25519 key without asking")
 	f.BoolVar(&addFlags.noVerify, "no-verify", false, "skip the live ssh authentication test")
 	f.BoolVar(&addFlags.noUpload, "no-upload", false, "never offer gh key upload")
@@ -64,6 +65,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		Key:        addFlags.key,
 		Sign:       addFlags.sign,
 		SigningKey: addFlags.signingKey,
+		Auth:       addFlags.auth,
 	}
 	passphrase := ""
 	generate := addFlags.generate || a.Key == ""
@@ -73,7 +75,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		if err := askAccountBasics(cfg, &a); err != nil {
 			return err
 		}
-		if a.Key == "" {
+		if a.AuthMode() == "ssh" && a.Key == "" {
 			if err := askKeyChoice(&a, &generate, &passphrase); err != nil {
 				return err
 			}
@@ -86,7 +88,13 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	if a.Dir == "" {
 		a.Dir = "~/" + a.Name
 	}
-	if a.Key == "" {
+	if a.AuthMode() == "https" {
+		a.Key = ""
+		generate = false
+		if a.Sign == "ssh" { // ssh signing needs an ssh key; downgrade the default
+			a.Sign = "none"
+		}
+	} else if a.Key == "" {
 		a.Key = "~/.ssh/wardrobe_" + a.Name
 	}
 	if _, exists := cfg.Get(a.Name); exists {
@@ -96,8 +104,10 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// 1. Key.
-	if generate {
+	// 1. Key (ssh auth only).
+	if a.AuthMode() == "https" {
+		// nothing to do: PATs live in the credential helper
+	} else if generate {
 		if err := sshcfg.GenerateKey(a.KeyPath(), a.Email, passphrase); err != nil {
 			return err
 		}
@@ -132,15 +142,16 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// 3. Public key registration.
-	pub, err := sshcfg.PublicKey(a.KeyPath())
-	if err == nil {
-		offerKeyRegistration(&a, pub)
-	}
-
-	// 4. Live verification.
-	if !addFlags.noVerify {
-		verifyAccount(&a)
+	// 3. Public key registration + live verification (ssh auth only).
+	if a.AuthMode() == "ssh" {
+		if pub, err := sshcfg.PublicKey(a.KeyPath()); err == nil {
+			offerKeyRegistration(&a, pub)
+		}
+		if !addFlags.noVerify {
+			verifyAccount(&a)
+		}
+	} else {
+		ui.Infof("https auth: git will use your credential helper's PAT for %s — nothing to register here", a.Host)
 	}
 
 	if err := cfg.Save(); err != nil {
@@ -207,13 +218,25 @@ func askAccountBasics(cfg *config.Config, a *config.Account) error {
 					huh.NewOption("Other / self-hosted", "other"),
 				).
 				Value(&a.Host),
+			huh.NewSelect[string]().Title("Connection").
+				Description("SSH keys are recommended; pick HTTPS if this account uses a PAT (e.g. Azure DevOps)").
+				Options(
+					huh.NewOption("SSH key (recommended)", "ssh"),
+					huh.NewOption("HTTPS + PAT (credential helper)", "https"),
+				).
+				Value(&a.Auth),
 			huh.NewSelect[string]().Title("Commit signing").
 				Description("SSH signing reuses the same key — verified badge, no GPG needed").
-				Options(
-					huh.NewOption("Sign with SSH key (recommended)", "ssh"),
-					huh.NewOption("Sign with an existing GPG key", "gpg"),
-					huh.NewOption("No signing", "none"),
-				).
+				OptionsFunc(func() []huh.Option[string] {
+					opts := []huh.Option[string]{}
+					if a.Auth != "https" {
+						opts = append(opts, huh.NewOption("Sign with SSH key (recommended)", "ssh"))
+					}
+					return append(opts,
+						huh.NewOption("Sign with an existing GPG key", "gpg"),
+						huh.NewOption("No signing", "none"),
+					)
+				}, &a.Auth).
 				Value(&a.Sign),
 		),
 	)
