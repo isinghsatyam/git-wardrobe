@@ -6,7 +6,7 @@ import (
 )
 
 // Version is stamped by goreleaser / -ldflags at build time.
-var Version = "0.1.0"
+var Version = "0.2.0"
 
 var rootCmd = &cobra.Command{
 	Use:     "git-wardrobe",
