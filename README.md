@@ -183,6 +183,25 @@ git wardrobe doctor   # confirm the new state is sound
 
 An invalid edit (typo'd signing mode, missing email) is rejected before anything is regenerated. For bigger surgery, `remove` + `add` re-runs the full wizard.
 
+## Adopting an existing (messy) setup
+
+Already have keys, aliases, `includeIf` blocks, and half-remembered config spread everywhere? That's wardrobe's favorite patient. The safe sequence:
+
+```sh
+# 1. Backup — one file, full rollback insurance
+cd ~ && tar czf git-setup-backup.tar.gz .gitconfig .gitconfig-* .ssh 2>/dev/null
+
+# 2. Adopt each account, reusing your EXISTING keys (nothing new is created)
+git wardrobe add    # wizard → "Reuse an existing key file" → ~/.ssh/id_work
+#    …repeat per account. GPG signer? pick "Sign with an existing GPG key".
+#    Azure DevOps / PAT account? pick "HTTPS + PAT".
+
+# 3. Audit — old and new config coexist; nothing is deleted yet
+git wardrobe doctor --network
+```
+
+`doctor` now tells you the truth about the setup you *thought* you had: keys that silently authenticate as the wrong account (the missing-`IdentitiesOnly` classic), repos overriding your identity with stale emails, unprotected keys, forgotten orphans. Fix what it flags, re-run until green, and only then delete your old hand-rolled `Host` blocks and `includeIf` entries — wardrobe's generated config has already taken over. Rollback at any point: extract the tarball.
+
 ## Platforms & permissions
 
 | Platform | Status | Notes |
@@ -226,8 +245,8 @@ It adds one `Include` line to `~/.ssh/config` and one `include.path` to your glo
 **I already have keys/aliases set up by hand.**
 Point `add` at your existing key (`--key ~/.ssh/id_work` or the "reuse" wizard option) and wardrobe adopts it. Run `doctor` afterwards — it audits pre-existing config too and will tell you what your hand-rolled setup got wrong.
 
-**What about HTTPS remotes?**
-Wardrobe's identity routing (`includeIf`) applies regardless of transport, so commit author/signing is always right. Key routing is SSH; for HTTPS credential separation, `gh auth switch` or per-account credential helpers are the right tool.
+**What about HTTPS remotes / PATs / Azure DevOps?**
+First-class: give the account `auth = "https"` (wizard: *Connection → HTTPS + PAT*). No SSH key is created — your PAT stays in the OS credential helper — while identity routing (email, GPG signing, per-directory switching) works exactly the same. `clone` leaves https URLs untouched, so Azure DevOps URL shapes work as-is. Mixing is fine: GitHub accounts on SSH, corporate Azure accounts on PAT, one config.
 
 **Does the `gh` CLI need switching per project?**
 Rarely. Plain git (clone/commit/push) never touches `gh` — wardrobe's SSH routing covers it. Only `gh`-specific commands (creating repos, PRs, issues, releases) use gh's own login, which is global, not per-directory. gh handles multiple accounts natively:
